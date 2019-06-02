@@ -28,10 +28,7 @@ Date.prototype.isOff = function() {
     || belgian_holidays.filter(d => d.getTime() == this.getTime()).length;
 }
 Date.prototype.asKey = function() {
-  const year = `${this.getFullYear()}`;
-  const month = `${this.getMonth()}`.padStart(2, '0');
-  const date = `${this.getDate()}`.padStart(2, '0');
-  return year + month + date;
+  return this.toLocaleDateString('ko-KR');
 }
 Object.defineProperty(Date.prototype, 'timestamp', {
   get: function timestamp() {
