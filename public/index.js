@@ -68,7 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   /*
    * bootstrap
    */
+  await firebase.auth().signInAnonymously();
   await bootstrap();
+  update();
 
   /*
    * add form submit listener
@@ -84,12 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         update();
       });
   });
-
-  /*
-   * update data and view
-   */
-  await firebase.auth().signInAnonymously();
-  update();
 });
 
 const bootstrap = async () => {
