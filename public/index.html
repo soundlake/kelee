@@ -13,17 +13,21 @@
   </head>
   <body>
     <div class="container">
-      <h2>오늘은 <span id="today"></span></h2>
+      <p>오늘은 <span id="today"></span></p>
       <h2 id="status"></h2>
-      <form id="form">
+      <form id="form" class="daily">
+        <label for="wc"><span class="todo">0</span>단어 중</label>
         <input id="wc" type="number" min="0" max="5000" value="0"/>
-        <button id="submit" type="submit">입력</button>
+        <span>단어 </span>
+        <button id="submit" type="submit">씀</button>
+        <span>(<span class="percent">0</span>%)</span>
       </form>
-      <h3>시작일: <span id="first"></span></h3>
-      <h3>마감일: <span id="last"></span></h3>
-      <h3 class="days">업무일: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
-      <h3 class="total">전체: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
-      <h3 class="daily">오늘: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
+      <ul>
+        <li>시작일: <span id="first"></span></li>
+        <li>마감일: <span id="last"></span></li>
+        <li class="days">업무일: <span class="todo">0</span>일 중 <span class="done">0</span>일 지남 (<span class="rest">0</span>일 남음)</li>
+        <li class="total">총분량: <span class="todo">0</span>단어 중 <span class="done">0</span>단어 씀 (<span class="percent">0</span>%)</li>
+      </ul>
     </div>
     <script src="index.js"></script>
   </body>

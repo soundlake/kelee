@@ -1,5 +1,13 @@
 'use strict';
 
+const total_todo = 15000;
+const date_first = new Date(2019, 6 - 1, 3);
+const date_last = new Date(2019, 7 - 1, 31);
+const today = new Date(new Date().setHours(0, 0, 0, 0));
+
+/*
+ * Date plugins
+ */
 Date.prototype.toString = function() {
   return this.toLocaleDateString('ko-KR', {
     weekday: 'long',
@@ -19,6 +27,12 @@ Date.prototype.isOff = function() {
   return weekend.includes(this.getDay())
     || belgian_holidays.filter(d => d.getTime() == this.getTime()).length;
 }
+Date.prototype.asKey = function() {
+  const year = `${this.getFullYear()}`;
+  const month = `${this.getMonth()}`.padStart(2, '0');
+  const date = `${this.getDate()}`.padStart(2, '0');
+  return year + month + date;
+}
 Object.defineProperty(Date.prototype, 'timestamp', {
   get: function timestamp() {
     return Math.floor(this.getTime() / 1000);
@@ -27,94 +41,107 @@ Object.defineProperty(Date.prototype, 'timestamp', {
 
 document.addEventListener('DOMContentLoaded', async () => {
   /*
-   * bootstrap
+   * init
    */
-  var g = {
-    first: new Date(2019, 6 - 1, 3),
-    last: new Date(2019, 7 - 1, 31),
-    total: 15000,
-    today: new Date(new Date().setHours(0, 0, 0, 0)),
-  };
-
   var status =
-    g.today < g.first ? '아직은 기다릴 때' :
-    g.today >= g.last ? '이미 끝' :
-    g.today.isOff() ? '오늘은 쉬는 날' : '오늘도 성실히';
+    today < date_first ? '아직은 기다릴 때' :
+    today >= date_last ? '이미 끝' :
+    today.isOff() ? '오늘은 쉬는 날' : '오늘도 성실히';
 
-  if (g.today < g.first || g.today >= g.last || g.today.isOff()) {
-    g.daily = 0;
+  if (today < date_first || today >= date_last || today.isOff()) {
     document.querySelector('.daily').style.display = 'none';
     document.getElementById('form').style.display = 'none';
   } else {
-    g.daily = 367;
     document.querySelector('.daily').style.display = 'block';
     document.getElementById('form').style.display = 'block';
   }
 
-  document.getElementById('first').textContent = g.first;
-  document.getElementById('last').textContent = g.last;
-  document.querySelector('.days .done').textContent = countWorkingDays(g.first, g.today);
-  document.querySelector('.days .todo').textContent = countWorkingDays(g.first, g.last);
+  document.getElementById('first').textContent = date_first;
+  document.getElementById('last').textContent = date_last;
 
-  document.getElementById('today').textContent = g.today;
+  document.getElementById('today').textContent = today;
   document.title = status;
   document.getElementById('status').textContent = status;
 
-  document.querySelector('.total .todo').textContent = g.total;
-  document.querySelector('.daily .todo').textContent = g.daily;
+  document.querySelector('.total .todo').textContent = total_todo;
 
   /*
-   * async update
+   * bootstrap
+   */
+  await bootstrap();
+
+  /*
+   * add form submit listener
+   */
+  document.getElementById('form').addEventListener('submit', event => {
+    event.preventDefault();
+    firebase.firestore().collection('kelee').doc(today.asKey())
+      .update({
+        dt: today,
+        wc: Number(document.getElementById('wc').value),
+      })
+      .then(() => {
+        update();
+      });
+  });
+
+  /*
+   * update data and view
    */
   await firebase.auth().signInAnonymously();
-  await update(g);
-
-  /*
-   * submit form
-   */
-  document.getElementById('submit').addEventListener('click', async (event) => {
-    await handleSubmit(event);
-    await update(g);
-  });
-  document.getElementById('wc').addEventListener('keyup', async (event) => {
-    if ('Enter' == event.key) {
-      await handleSubmit(event);
-      await update(g);
-    }
-  });
+  update();
 });
 
-var update = async g => {
-  var tomorrow = new Date(g.today).setDate(g.today.getDate() + 1);
-  var total = 0;
-  var daily = 0;
-
-  var querySnapshot = await firebase.firestore().collection('prog').get();
-  querySnapshot.forEach(doc => {
-    let d = doc.data();
-    total += d.wc;
-    if (g.today.timestamp <= d.time.seconds && d.time.seconds < tomorrow) {
-      daily += d.wc;
-    }
-  });
-  document.querySelector('.total .done').textContent = total;
-  document.querySelector('.daily .done').textContent = daily;
-  document.querySelector('.total .percent').textContent = (total / g.total * 100).toFixed(2);
-  document.querySelector('.daily .percent').textContent = (daily / g.daily * 100).toFixed(2);
-}
-
-var handleSubmit = async event => {
-  event.preventDefault();
-  await firebase.firestore().collection('prog').add({
-    time: new Date(),
-    wc: Number(document.getElementById('wc').value),
-  });
-}
-
-var countWorkingDays = (first, last) => {
-  var count = 0;
-  for (var d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
-    count += d.isOff() ? 0 : 1;
+const bootstrap = async () => {
+  const db = firebase.firestore();
+  const batch = db.batch();
+  const querySnapshot = await db.collection('kelee').get()
+  if (!querySnapshot.empty) {
+    return;
   }
-  return count;
+
+  for (const d = new Date(date_first); d <= date_last; d.setDate(d.getDate() + 1)) {
+    if (!d.isOff()) {
+      batch.set(db.collection('kelee').doc(d.asKey()), {
+        dt: d,
+        wc: 0,
+      });
+    }
+  }
+  await batch.commit();
+}
+
+const update = async () => {
+  const db = firebase.firestore();
+
+  // days
+  const days_done = (await db.collection('kelee').where('dt', '<', today).get()).size;
+  const days_todo = (await db.collection('kelee').get()).size;
+  const days_rest = days_todo - days_done;
+  document.querySelector('.days .done').textContent = days_done;
+  document.querySelector('.days .todo').textContent = days_todo;
+  document.querySelector('.days .rest').textContent = days_rest;
+
+  // total
+  let total_done = 0;
+  db.collection('kelee').get().then(querySnapshot => {
+    querySnapshot.forEach(doc => {
+      total_done += doc.data().wc;
+    });
+    document.querySelector('.total .done').textContent = total_done;
+    document.querySelector('.total .percent').textContent = (total_done / total_todo * 100).toFixed(2);
+  });
+
+  // today
+  db.collection('kelee').doc(today.asKey()).get().then(queryDocumentSnapshot => {
+    if (!queryDocumentSnapshot.exists) {
+      return;
+    }
+    const total_rest = total_todo - total_done;
+    const daily_todo = Math.ceil(total_rest / (days_rest || 1));
+    const daily_done = queryDocumentSnapshot.data().wc;
+    document.querySelector('input#wc').value = daily_done;
+    document.querySelector('.daily .percent').textContent = (daily_done / daily_todo * 100).toFixed(2);
+    document.querySelector('.daily .todo').textContent = daily_todo;
+  });
 }
