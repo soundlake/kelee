@@ -4,6 +4,7 @@ const total_todo = 15000;
 const date_first = new Date('2019. 6. 3');
 const date_last = new Date('2019. 7. 31');
 const today = new Date(new Date().setHours(0, 0, 0, 0));
+const local_db = {};
 const remote_db_id = 'kelee';
 
 /*
@@ -75,11 +76,12 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   document.getElementById('form').addEventListener('submit', event => {
     event.preventDefault();
+    local_db[today.asKey()] = {
+      dt: today,
+      wc: Number(document.getElementById('wc').value),
+    };
     firebase.firestore().collection(remote_db_id).doc(today.asKey())
-      .update({
-        dt: today,
-        wc: Number(document.getElementById('wc').value),
-      })
+      .update(local_db[today.asKey()])
       .then(() => {
         update();
       });
@@ -96,10 +98,15 @@ const bootstrap = async () => {
 
   for (const d = new Date(date_first); d <= date_last; d.setDate(d.getDate() + 1)) {
     if (!d.isOff()) {
-      batch.set(db.collection(remote_db_id).doc(d.asKey()), documentData);
+      const documentData = {
         dt: d,
         wc: 0,
-      });
+      };
+      batch.set(db.collection(remote_db_id).doc(d.asKey()), documentData);
+      local_db[d.asKey()] = {
+        dt: new Date(documentData.dt.seconds * 1000),
+        wc: documentData.wc
+      };
     }
   }
   await batch.commit();
@@ -108,23 +115,35 @@ const bootstrap = async () => {
 const update = async () => {
   const db = firebase.firestore();
 
+  // total
+  let total_done = 0;
+  if (Object.entries(local_db).length === 0) {
+    // by this we can save up the google cloud quota
+    const querySnapshot = await db.collection(remote_db_id).get();
+    querySnapshot.forEach(queryDocumentSnapshot => {
+      const documentData = queryDocumentSnapshot.data();
+      total_done += documentData.wc;
+      local_db[queryDocumentSnapshot.id] = {
+        dt: new Date(documentData.dt.seconds * 1000),
+        wc: documentData.wc
+      };
+    });
+  } else {
+    for (let documentData of Object.values(local_db)) {
+      total_done += documentData.wc;
+    }
+  }
+  document.querySelector('.total .done').textContent = total_done;
+  document.querySelector('.total .percent').textContent = (total_done / total_todo * 100).toFixed(2);
+
   // days
-  const days_done = (await db.collection('kelee').where('dt', '<', today).get()).size;
-  const days_todo = (await db.collection('kelee').get()).size;
+  // now local_db is supposed to be warmed up
+  const days_done = Object.values(local_db).filter(doc => doc.dt < today).length;
+  const days_todo = Object.values(local_db).length;
   const days_rest = days_todo - days_done;
   document.querySelector('.days .done').textContent = days_done;
   document.querySelector('.days .todo').textContent = days_todo;
   document.querySelector('.days .rest').textContent = days_rest;
-
-  // total
-  let total_done = 0;
-  db.collection(remote_db_id).get().then(querySnapshot => {
-    querySnapshot.forEach(doc => {
-      total_done += doc.data().wc;
-    });
-    document.querySelector('.total .done').textContent = total_done;
-    document.querySelector('.total .percent').textContent = (total_done / total_todo * 100).toFixed(2);
-  });
 
   // today
   db.collection(remote_db_id).doc(today.asKey()).get().then(queryDocumentSnapshot => {
