@@ -130,8 +130,7 @@ const update = async () => {
     if (!queryDocumentSnapshot.exists) {
       return;
     }
-    const total_rest = total_todo - total_done;
-    const daily_todo = Math.ceil(total_rest / (days_rest || 1));
+    const daily_todo = Math.ceil(total_todo / days_todo / 10) * 10;
     const daily_done = queryDocumentSnapshot.data().wc;
     document.querySelector('input#wc').value = daily_done;
     document.querySelector('.daily .percent').textContent = (daily_done / daily_todo * 100).toFixed(2);
