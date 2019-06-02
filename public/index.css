@@ -1,0 +1,10 @@
+body {
+  font-family: 'Gaegu', cursive;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  margin: 0 auto;
+  width: 20em;
+}

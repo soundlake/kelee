@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <script defer src="/__/firebase/6.1.0/firebase-app.js"></script>
+    <script defer src="/__/firebase/6.1.0/firebase-auth.js"></script>
+    <script defer src="/__/firebase/6.1.0/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Gaegu&display=swap" rel="stylesheet">
+    <link href="index.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <h2>오늘은 <span id="today"></span></h2>
+      <h2 id="status"></h2>
+      <form id="form">
+        <input id="wc" type="number" min="0" max="5000" value="0"/>
+        <button id="submit" type="submit">입력</button>
+      </form>
+      <h3>시작일: <span id="first"></span></h3>
+      <h3>마감일: <span id="last"></span></h3>
+      <h3 class="days">업무일: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
+      <h3 class="total">전체: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
+      <h3 class="daily">오늘: <span class="done">0</span> / <span class="todo"></span> (<span class="percent">0</span>%)</h3>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
