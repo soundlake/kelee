@@ -4,6 +4,7 @@ const total_todo = 15000;
 const date_first = new Date('2019. 6. 3');
 const date_last = new Date('2019. 7. 31');
 const today = new Date(new Date().setHours(0, 0, 0, 0));
+const remote_db_id = 'kelee';
 
 /*
  * Date plugins
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   document.getElementById('form').addEventListener('submit', event => {
     event.preventDefault();
-    firebase.firestore().collection('kelee').doc(today.asKey())
+    firebase.firestore().collection(remote_db_id).doc(today.asKey())
       .update({
         dt: today,
         wc: Number(document.getElementById('wc').value),
@@ -88,14 +89,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 const bootstrap = async () => {
   const db = firebase.firestore();
   const batch = db.batch();
-  const querySnapshot = await db.collection('kelee').get()
+  const querySnapshot = await db.collection(remote_db_id).get()
   if (!querySnapshot.empty) {
     return;
   }
 
   for (const d = new Date(date_first); d <= date_last; d.setDate(d.getDate() + 1)) {
     if (!d.isOff()) {
-      batch.set(db.collection('kelee').doc(d.asKey()), {
+      batch.set(db.collection(remote_db_id).doc(d.asKey()), documentData);
         dt: d,
         wc: 0,
       });
@@ -117,7 +118,7 @@ const update = async () => {
 
   // total
   let total_done = 0;
-  db.collection('kelee').get().then(querySnapshot => {
+  db.collection(remote_db_id).get().then(querySnapshot => {
     querySnapshot.forEach(doc => {
       total_done += doc.data().wc;
     });
@@ -126,7 +127,7 @@ const update = async () => {
   });
 
   // today
-  db.collection('kelee').doc(today.asKey()).get().then(queryDocumentSnapshot => {
+  db.collection(remote_db_id).doc(today.asKey()).get().then(queryDocumentSnapshot => {
     if (!queryDocumentSnapshot.exists) {
       return;
     }
