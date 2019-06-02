@@ -1,8 +1,8 @@
 'use strict';
 
 const total_todo = 15000;
-const date_first = new Date(2019, 6 - 1, 3);
-const date_last = new Date(2019, 7 - 1, 31);
+const date_first = new Date('2019. 6. 3');
+const date_last = new Date('2019. 7. 31');
 const today = new Date(new Date().setHours(0, 0, 0, 0));
 
 /*
@@ -19,10 +19,10 @@ Date.prototype.toString = function() {
 Date.prototype.isOff = function() {
   var weekend = [0, 6];
   var belgian_holidays = [
-    new Date(2019, 6 - 1, 10),  // Whit Monday
-    new Date(2019, 7 - 1, 11),  // Flemish Community Holiday
-    new Date(2019, 7 - 1, 21),  // Independence Day
-    new Date(2019, 8 - 1, 15),  // Assumption
+    new Date('2019. 6. 10'),  // Whit Monday
+    new Date('2019. 7. 11'),  // Flemish Community Holiday
+    new Date('2019. 7. 21'),  // Independence Day
+    new Date('2019. 8. 15'),  // Assumption
   ];
   return weekend.includes(this.getDay())
     || belgian_holidays.filter(d => d.getTime() == this.getTime()).length;
