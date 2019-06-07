@@ -32,3 +32,16 @@ button {
   border: 0;
   background: #61b3f9;
 }
+
+svg {
+  fill: none;
+  border: 1px solid #ccc;
+}
+
+svg path {
+  stroke: #00BCD4;
+  stroke-width: 0.3;
+}
+svg path#graph {
+  stroke: #ffc107;
+}

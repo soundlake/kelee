@@ -156,4 +156,10 @@ const update = async () => {
     document.querySelector('.daily .percent').textContent = (daily_done / daily_todo * 100).toFixed(2);
     document.querySelector('.daily .todo').textContent = daily_todo;
   });
+
+  // graph
+  const values = Object.values(local_db);
+  values.sort((a, b) => a.dt.timestamp - b.dt.timestamp);
+  const d = values.map(d => `l1,${d.wc}`).join(' ');
+  document.getElementById('graph').setAttribute('d', `m0,0 ${d} z`);
 }
