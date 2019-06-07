@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   var status =
     today < date_first ? '아직은 기다릴 때' :
     today >= date_last ? '이미 끝' :
-    today.isOff() ? '오늘은 쉬는 날' : '오늘도 성실히';
+    today.isOff() ? '오늘은 쉬는 날🌄🛀☀️🎈' : '🔥오늘도 성실히🔥';
 
   if (today < date_first || today >= date_last || today.isOff()) {
     document.querySelector('.daily').style.display = 'none';
